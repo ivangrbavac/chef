@@ -46,6 +46,8 @@ contract ChefICO is SafeOperations {
     uint public hardCapReachedDeadline;
     uint public ChefPrice;
     uint public bonusDeadline; //deadline for additional 5% in ICO
+    uint minimumInvestment;
+    uint maximumInvestment;
 	bool softCapReached = false;
     bool crowdsaleClosed = false;
 	bool hardCapReached = false;
@@ -69,6 +71,8 @@ contract ChefICO is SafeOperations {
         hardCapReachedDeadline=1530406800;
         bonusDeadline = 1527728400; //02.06.2018 00:00:00 CET 
         ChefPrice = 0.0001 * 1 ether;
+        minimumInvestment=0.2 * 1 ether;
+        maximumInvestment = 100 * 1 ether;
         Chef = ChefToken(ChefAddress);
     }
 
@@ -80,6 +84,7 @@ contract ChefICO is SafeOperations {
     function () public payable {
         require(!crowdsaleClosed && !hardCapReached);
         uint amount = msg.value;
+        require(amount>=minimumInvestment && balanceOf[msg.sender]<maximumInvestment);
         
         if(hardCap >= Add(totalAmount,amount))
         {
@@ -94,6 +99,15 @@ contract ChefICO is SafeOperations {
                 amount= Sub(amount,returnAmount);    
              }
         }
+        
+        if(maximumInvestment>Add(balanceOf[msg.sender],amount))
+        {
+          uint overMaxAmount=Sub(Add(balanceOf[msg.sender],amount),maximumInvestment);
+          msg.sender.transfer(overMaxAmount);
+          emit ChefICOTransfer(msg.sender, overMaxAmount, false);
+          amount= Sub(amount,overMaxAmount);
+        }
+        
         
         balanceOf[msg.sender] =Add(balanceOf[msg.sender] ,amount);
         totalAmount =Add(totalAmount, amount);
@@ -153,23 +167,23 @@ function setHardCapReachedDeadline (uint withdrawalDate) public
   
     function safeWithdrawal() public afterICOdeadline  {
         uint amount = balanceOf[msg.sender];
-        if (!softCapReached) {
-            balanceOf[msg.sender] = 0;
-            if (amount > 0) {
-                msg.sender.transfer(amount);
-                emit ChefICOTransfer(msg.sender, amount, false);
+        balanceOf[msg.sender] = 0;
+        if (amount > 0) {
+            if (!softCapReached) {
+                    msg.sender.transfer(amount);
+                    emit ChefICOTransfer(msg.sender, amount, false);
             }
-        }
-        
-        if (softCapReached && recipient != msg.sender) {
-            Chef.transferFromCroudsale(msg.sender, ChefBalanceOf[msg.sender]);
-            emit  ChefICOTransfer(msg.sender, ChefBalanceOf[msg.sender], true);
-        }
-
-        if (softCapReached && recipient == msg.sender) {
-            recipient.transfer(totalAmount);
-            emit  ChefICOTransfer(recipient, totalAmount, false);
             
+            if (softCapReached && recipient != msg.sender) {
+                Chef.transferFromCroudsale(msg.sender, ChefBalanceOf[msg.sender]);
+                emit  ChefICOTransfer(msg.sender, ChefBalanceOf[msg.sender], true);
+            }
+    
+            if (softCapReached && recipient == msg.sender) {
+                recipient.transfer(totalAmount);
+                emit  ChefICOTransfer(recipient, totalAmount, false);
+                
+            }
         }
     }
 }
