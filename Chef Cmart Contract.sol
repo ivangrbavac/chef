@@ -104,6 +104,11 @@ contract ChefToken  is ChefTokenInterface, SafeOperations {
 	}
 		
 // ----------------------------------------------------------------------------
+// enable receiving ETH -mislim da je nećemo koristiti
+//-----------------------------------------------------------------------------
+//function () public payable {
+//}
+// ----------------------------------------------------------------------------
 // Public function that returns total supply of tokens
 //-----------------------------------------------------------------------------
 	function totalSupply() public constant returns (uint) {
@@ -217,9 +222,11 @@ contract ChefToken  is ChefTokenInterface, SafeOperations {
    	function addConsumerReview(address _consumer, address _chef, uint32 _position, string _review) public returns (bool success){
 		if (msg.sender != _consumer || cokingEvent[_consumer][_chef][_position].consumer!=1 || cokingEvent[_consumer][_chef][_position].chef!=1 || bytes(cokingEvent[_consumer][_chef][_position].consumerReview).length!=0 && cokingEvent[_consumer][msg.sender][_position].state>100){
 		    return false;   
-		    }
+		    } 
+		else {
 		cokingEvent[_consumer][_chef][_position].consumerReview=_review;
 		emit Review(_consumer, _chef, _position, _review, "Consumer review");
+		    }
 		return true;
 	}
 	
@@ -231,8 +238,10 @@ contract ChefToken  is ChefTokenInterface, SafeOperations {
 		if (msg.sender != _chef || cokingEvent[_consumer][_chef][_position].consumer!=1 || cokingEvent[_consumer][_chef][_position].chef!=1 || bytes(cokingEvent[_consumer][_chef][_position].chefReview).length!=0 && cokingEvent[_consumer][msg.sender][_position].state>100){
 		    return false;   
 		    }
+		else {   
 		cokingEvent[_consumer][_chef][_position].chefReview=_review;
 		emit Review(_consumer, _chef, _position, _review, "Chef review");
+		     }
 		return true;
 	}
 	
