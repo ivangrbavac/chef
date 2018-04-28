@@ -23,7 +23,7 @@ contract ChefICOInvestors {
     
     bool public softCapReached = false;
 
-	mapping(address => uint256) public balanceOf;
+    mapping(address => uint256) public balanceOf;
 
     event ChefICOTransfer(address indexed tokenHolder, uint value, bool isContribution);
 
@@ -55,13 +55,13 @@ contract ChefICOInvestors {
     
     
     modifier afterICOdeadline() { 
-        if (now >= icoEnd )
+        require(now >= icoEnd )
             _; 
         }
        
         
      modifier beforeICOdeadline() { 
-        if (now <= icoEnd )
+        require(now <= icoEnd )
             _; 
         }
     
@@ -77,13 +77,13 @@ contract ChefICOInvestors {
     
     
     function setSoftCapStatus (bool _value) public onlyOwner {
-		softCapReached = _value;
+	softCapReached = _value;
 	}    
 
 
    function safeWithdrawal() public afterICOdeadline {
         if (!softCapReached) {
-			uint256 amount = balanceOf[msg.sender];
+	    uint256 amount = balanceOf[msg.sender];
             balanceOf[msg.sender] = 0;
             if (amount > 0) {
                 msg.sender.transfer(amount);
