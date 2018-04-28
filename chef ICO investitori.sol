@@ -55,13 +55,13 @@ contract ChefICOInvestors {
     
     
     modifier afterICOdeadline() { 
-        require(now >= icoEnd )
+        require(now >= icoEnd );
             _; 
         }
        
         
      modifier beforeICOdeadline() { 
-        require(now <= icoEnd )
+        require(now <= icoEnd );
             _; 
         }
     
