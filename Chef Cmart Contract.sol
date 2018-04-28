@@ -38,9 +38,10 @@ contract ChefTokenInterface {
     function transferFrom(address from, address to, uint256 value) public returns (bool success);
     function approveAndCall(address spender, uint256 value, bytes extraData) public returns (bool success);
     function burn(uint256 value) public returns (bool success);
-    function setCookUpFee(uint256 _fee) public returns (bool success);
+    function setCharityDonation(uint256 donation) public returns (bool success);
+    function setCookUpFee(uint256 fee) public returns (bool success);
     function setCharityAddress(address tempAddress) public returns (bool success);
-    function setAdvisorsTeamAddress(address _tempAddress) public returns (bool success);
+    function setAdvisorsTeamAddress(address tempAddress) public returns (bool success);
     function releaseAdvisorsTeamTokens () public returns (bool success);
 
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -66,9 +67,12 @@ contract ChefToken is Ownable, ChefTokenInterface {
     uint8 public decimals = 18;
     uint256 public totalSupply;
     uint256 public cookUpFee;
+    uint256 public charityDonation;
     address public tempCharity;
     address public tempAdvisorsTeam;
     uint256 public tokensReleasedAdvisorsTeam;
+    uint256 initialReleaseDate; 
+    uint256 releaseSum; 
     mapping (address => uint256) public balanceOf; 
     mapping (address => mapping (address => uint256)) public allowance;
     
@@ -82,7 +86,10 @@ contract ChefToken is Ownable, ChefTokenInterface {
     tempCharity = address(0);
     tempAdvisorsTeam = address(0);
     tokensReleasedAdvisorsTeam = 0;
+    initialReleaseDate = 1530396000;
+    releaseSum = 1575*(10**5)*(10**18);
     cookUpFee = 7;
+    charityDonation=3;
 	}
 
 
@@ -119,9 +126,10 @@ contract ChefToken is Ownable, ChefTokenInterface {
 // ostatak od 7% ostaje CookUp-u.
 //-----------------------------------------------------------------------------
     function servicePaymentWithCharityPercentage(address _to, uint256 _value)  public onlyOwner returns  (bool success) {
-        _transfer(msg.sender, _to, _value.mul(100 - cookUpFee - 3).div(100));
+        uint256 servicePercentage = 100 - cookUpFee - charityDonation;
+        _transfer(msg.sender, _to, _value.mul(servicePercentage).div(100));
         _transfer(msg.sender, tempCharity, _value.mul(3).div(100));
-        emit PaymentWithCharityPercentage (msg.sender, _to, tempCharity, _value.mul(100 - cookUpFee - 3).div(100), _value.mul(3).div(100));
+        emit PaymentWithCharityPercentage (msg.sender, _to, tempCharity, _value.mul(servicePercentage).div(100), _value.mul(3).div(100));
         return true;
     }
 		
@@ -174,6 +182,12 @@ contract ChefToken is Ownable, ChefTokenInterface {
     }
     
     
+     function setCharityDonation(uint256 _donation) public onlyOwner returns (bool success) {
+        charityDonation = _donation;
+        return true;    
+    }
+    
+    
     function setAdvisorsTeamAddress(address _tempAddress) public onlyOwner returns (bool success) {
         tempAdvisorsTeam = _tempAddress;
         return true;    
@@ -185,8 +199,6 @@ contract ChefToken is Ownable, ChefTokenInterface {
 //-----------------------------------------------------------------------------
     
     function releaseAdvisorsTeamTokens () public onlyOwner returns (bool success) {
-        uint256 initialReleaseDate = 1530396000; //01.07.2018. 00:00:00 CET
-        uint256 releaseSum = 1575*(10**5)*(10**18); //25% of all tokens
         uint256 releaseAmount = releaseSum.div(12);
         if((releaseSum >= (tokensReleasedAdvisorsTeam.add(releaseAmount))) && (initialReleaseDate+(tokensReleasedAdvisorsTeam.mul(30 days).mul(12).div(releaseSum)) <= now)) {
             tokensReleasedAdvisorsTeam=tokensReleasedAdvisorsTeam.add(releaseAmount);
