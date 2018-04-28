@@ -31,8 +31,8 @@ contract ChefICO {
     using SafeMath for uint256;
     
     uint256 public softCap;
-	uint256 public hardCap;
-	uint256 public tempHardCap;
+    uint256 public hardCap;
+    uint256 public tempHardCap;
     uint256 public totalAmount;
     uint256 public reservedAmount;
     uint256 public chefPrice;
@@ -44,11 +44,11 @@ contract ChefICO {
     uint256 public icoEnd;
     address public chefOwner;
 
-	bool public softCapReached = false;
-	bool public hardCapReached = false;
+    bool public softCapReached = false;
+    bool public hardCapReached = false;
 
-	mapping(address => uint256) public balanceOf;
-	mapping(address => uint256) public chefBalanceOf;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => uint256) public chefBalanceOf;
 
     event ChefICOSucceed(address indexed recipient, uint totalAmount);
     event ChefICOTransfer(address indexed tokenHolder, uint value, bool isContribution);
@@ -88,12 +88,12 @@ contract ChefICO {
     
     
     modifier afterICOdeadline() { 
-        if (now >= icoEnd )
+        require(now >= icoEnd )
             _; 
         }
         
     modifier beforeICOdeadline() { 
-        if (now <= icoEnd )
+        require(now <= icoEnd )
             _; 
         }
     
@@ -163,7 +163,7 @@ contract ChefICO {
 
     
     function reservedAmount(uint256 _value) public onlyOwner {
-		_value = _value * 1 ether;
+	_value = _value * 1 ether;
         require(totalAmount.add(_value) <= hardCap);
         reservedAmount = _value;
         tempHardCap = hardCap.sub(_value);
@@ -172,13 +172,13 @@ contract ChefICO {
     
    function setSoftCapStatus (bool _value) public onlyOwner beforeICOdeadline {
         require(hardCap > totalAmount.add(reservedAmount));
-		softCapReached = _value;
+	softCapReached = _value;
 	}
 
 
    function safeWithdrawal() public afterICOdeadline {
         if (!softCapReached) {
-			uint256 amount = balanceOf[msg.sender];
+	    uint256 amount = balanceOf[msg.sender];
             balanceOf[msg.sender] = 0;
             if (amount > 0) {
                 msg.sender.transfer(amount);
