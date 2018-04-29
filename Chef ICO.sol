@@ -171,7 +171,7 @@ contract ChefICO {
     
     
    function setSoftCapStatus (bool _value) public onlyOwner beforeICOdeadline {
-        require(hardCap > totalAmount.add(reservedAmount));
+        require(hardCap >= totalAmount.add(reservedAmount));
 	softCapReached = _value;
 	}
 
