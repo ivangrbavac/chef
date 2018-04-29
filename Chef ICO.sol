@@ -138,19 +138,19 @@ contract ChefICO {
         }
                 
         if (now <= icoStart.add(10 days)) {
-            chefBalanceOf[msg.sender] = amount.div(chefPrice).mul(120 + additionalBonus).div(100);
+            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(120 + additionalBonus).div(100));
         }
         else if (now <= icoStart.add(20 days)) {
-            chefBalanceOf[msg.sender] = amount.div(chefPrice).mul(115 + additionalBonus).div(100);
+            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(115 + additionalBonus).div(100));
         }
         else if (now <= icoStart.add(30 days)) {
-            chefBalanceOf[msg.sender] = amount.div(chefPrice).mul(110 + additionalBonus).div(100);
+            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(110 + additionalBonus).div(100));
         }
         else if (now <= icoStart.add(40 days)) {
-            chefBalanceOf[msg.sender] = amount.div(chefPrice).mul(105 + additionalBonus).div(100);
+            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(105 + additionalBonus).div(100));
         }
         else {
-            chefBalanceOf[msg.sender] = amount.div(chefPrice).mul(finalBonus + additionalBonus).div(100);
+            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(finalBonus + additionalBonus).div(100));
         }
         
         emit ChefICOTransfer(msg.sender, amount, true);
