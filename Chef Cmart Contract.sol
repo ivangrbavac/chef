@@ -128,8 +128,8 @@ contract ChefToken is Ownable, ChefTokenInterface {
     function servicePaymentWithCharityPercentage(address _to, uint256 _value)  public onlyOwner returns  (bool success) {
         uint256 servicePercentage = 100 - cookUpFee - charityDonation;
         _transfer(msg.sender, _to, _value.mul(servicePercentage).div(100));
-        _transfer(msg.sender, tempCharity, _value.mul(3).div(100));
-        emit PaymentWithCharityPercentage (msg.sender, _to, tempCharity, _value.mul(servicePercentage).div(100), _value.mul(3).div(100));
+        _transfer(msg.sender, tempCharity, _value.mul(charityDonation).div(100));
+        emit PaymentWithCharityPercentage (msg.sender, _to, tempCharity, _value.mul(servicePercentage).div(100), _value.mul(charityDonation).div(100));
         return true;
     }
 		
