@@ -64,8 +64,7 @@ contract ChefICO {
         chefPrice = 0.0001 * 1 ether;
         minimumInvestment = 1 ether / 5;
         maximumInvestment = 250 * 1 ether;
-        finalBonus = 100;
-
+       
         icoStart = 1525471200;
         icoEnd = 1530396000;
         chefOwner = msg.sender;
@@ -99,12 +98,6 @@ contract ChefICO {
         }
     
    
-    function setFinalBonus(uint256 _value) public onlyOwner returns (bool success) {
-        finalBonus = _value;
-        return true;    
-    }
-
-
     function () public payable beforeICOdeadline {
         uint256 amount = msg.value;
         require(!hardCapReached);
@@ -135,10 +128,10 @@ contract ChefICO {
 
        
         if (amount >= 10 ether) {
-            if (amount >= 100 ether) {
+            if (amount >= 150 ether) {
                 chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(140).div(100));
             }
-            else if (amount >= 50 ether) {
+            else if (amount >= 70 ether) {
                 chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(135).div(100));
             }
             else if (amount >= 25 ether) {
@@ -161,7 +154,7 @@ contract ChefICO {
             chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(105).div(100));
         }
         else {
-            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(finalBonus).div(100));
+            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice));
         }
         
         emit ChefICOTransfer(msg.sender, amount, true);
