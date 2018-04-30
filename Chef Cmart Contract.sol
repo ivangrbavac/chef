@@ -123,7 +123,9 @@ contract ChefToken is Ownable, ChefTokenInterface {
 // prema prijedlogu, editirao sam funkciju za charity isplatu na način da se računa
 // 90% ukupnog iznosa koji se potom šalje kuharu te
 // 3% ukupnog iznosa koji se potom šalje humanitarnoj organizaciji
-// ostatak od 7% ostaje CookUp-u.
+// ostatak od 7% ostaje CookUp-u. Varijabla charityDonation predstavlja postotak za humanitarnu udrugu,  
+// a varijabla cookUpFee predstavlja postotak za CookUp.
+// sredstva za humanitarnu udrugu se isplaćuju na privremenu adresu s koje će se potom slati različitim udrugama.
 //-----------------------------------------------------------------------------
     function servicePaymentWithCharityPercentage(address _to, uint256 _value)  public onlyOwner returns  (bool success) {
         uint256 servicePercentage = 100 - cookUpFee - charityDonation;
