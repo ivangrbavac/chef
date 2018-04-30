@@ -1,9 +1,9 @@
 /*
+**U zadnjoj izmjeni dva ICO smart contracta su spojena u jedan - ovaj koji je bio namijenjen za opću publiku. 
+Promjene su takve da je limit za uplatu je dignut na 250ETH, a definirani su i bonusi za veće uplate. Bonusi su opisani pred kraj komentara.
+Maknute su funkcije koje su omogućavale ručno spuštanje har cap-a te upravljanje sa varijabolom koja indicira da je foct cap dosegnut.
+
  kratki opis značajnijih funkcija:
---reservedAmount funkcija prima iznos u ETH koji će se rezervirati za uplatu većih investitora u posebnom smart contractu. 
-    Navedeni iznos se odbija od hardCap-a definiranog u ovom ugovoru kako bi se smartcontract mogao automatski zaustaviti u slučaju dolaska do hardCap-a.
---setSoftCapStatus je funkcija koja će se morati pozvati ako se uplata iz ugovora s Velikim investitorom nije ostvarila,
-    a zbog nje je definirano da je probijen softCap ili u obrnutom slučaju.
 --setFinalBonus funcija služi da bi se u zadnjem periodu ICO-a mogao povećati bonus s 0% na neku veću razinu ako se za takav korak odluči uprava
 --safeWithdrawal funkcija služi da bi osoba u slučaju neuspješnog ICO-a mogla povući ETH natrag na svoj račun. 
 --chefOwnerWithdrawal funkcija služi da bi vlasnik tokena u slučaju uspješnog ICO-a mogao povući ETH na svoj račun. Isplata tokena sudionicima ICO-a će se raditi ručno
@@ -11,16 +11,21 @@
     
 Funkcija za uplatu ETH ima sljedeće karakteristike:
 - nije moguće raditi uplate nakon što je skupljen hardCap
-- osoba ne može raditi uplate nakon što je uplatila više od 100 ETH
+- osoba ne može raditi uplate nakon što je uplatila više od 250 ETH
 - moguće je uplaćivati ETH samo prije 01.07.2018 i to iznose ne manje od 0.2 ETH
 - ako je osoba uplatila određeni iznos s kojim je pređen hardCap, iznos preko hardCap-a će biti vraćen osobi
-- ako je osoba uplatila ili zadnjom uplatom prešla preko 100ETH, inos preko 100 ETH će joj biti vraćen
-- ako je osoba napravila cjelovitu uplatu od 10ETH ili više, ostvaruje 15% bonusa koji se pribraja osnovnom bonusu
+- ako je osoba uplatila ili zadnjom uplatom prešla preko 250ETH, inos preko 250 ETH će joj biti vraćen
+- ako je osoba uplatila iznos manji od 10 ETH ostvaruje osnovne bonuse definirane vremenom
 - osnovni bonusi su :
     *za uplatu u prvih 10 dana ICO-a osoba ostvaruje 20% bonusa
     *za uplatu u narednih 10 dana ICO-a osoba ostvaruje 15% bonusa
     *za uplatu u narednih 10 dana ICO-a osoba ostvaruje 10% bonusa
     *za uplatu u narednih 10 dana ICO-a osoba ostvaruje 5% bonusa
+- bonusi za velike uplate su :
+    * za uplatu veću od 100 ETH 40%
+    * za uplatu između 50 ETH i 100 ETH 35%
+    * za uplatu između 25 ETH i 50 ETH 30%
+    * za uplatu između 10 ETH i 25 ETH 25%
 */
 
   pragma solidity 0.4.23;
@@ -32,9 +37,7 @@ contract ChefICO {
     
     uint256 public softCap;
     uint256 public hardCap;
-    uint256 public tempHardCap;
     uint256 public totalAmount;
-    uint256 public reservedAmount;
     uint256 public chefPrice;
     uint256 public minimumInvestment;
     uint256 public maximumInvestment;
@@ -57,12 +60,10 @@ contract ChefICO {
     function ChefICO() public {
         softCap = 7000 * 1 ether;
         hardCap = 22500 * 1 ether;
-        tempHardCap = 22500 * 1 ether;
         totalAmount = 0;
-        reservedAmount = 0;
         chefPrice = 0.0001 * 1 ether;
         minimumInvestment = 1 ether / 5;
-        maximumInvestment = 100 * 1 ether;
+        maximumInvestment = 250 * 1 ether;
         finalBonus = 100;
 
         icoStart = 1525471200;
@@ -109,12 +110,12 @@ contract ChefICO {
         require(!hardCapReached);
         require(amount >= minimumInvestment && balanceOf[msg.sender] < maximumInvestment);
         
-        if(tempHardCap <= totalAmount.add(amount)) {
+        if(hardCap <= totalAmount.add(amount)) {
             hardCapReached = true;
             emit ChefICOSucceed(chefOwner, hardCap);
             
-             if(tempHardCap < totalAmount.add(amount)) {
-                uint256 returnAmount = totalAmount.add(amount).sub(tempHardCap);
+             if(hardCap < totalAmount.add(amount)) {
+                uint256 returnAmount = totalAmount.add(amount).sub(hardCap);
                 msg.sender.transfer(returnAmount);
                 emit ChefICOTransfer(msg.sender, returnAmount, false);
                 amount = amount.sub(returnAmount);    
@@ -132,25 +133,35 @@ contract ChefICO {
         balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
         
 
-        uint256 additionalBonus = 0;
+       
         if (amount >= 10 ether) {
-            additionalBonus=15;
+            if (amount >= 100 ether) {
+                chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(140).div(100));
+            }
+            else if (amount >= 50 ether) {
+                chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(135).div(100));
+            }
+            else if (amount >= 25 ether) {
+                chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(130).div(100));
+            }
+            else {
+                chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(125).div(100));
+            }
         }
-                
-        if (now <= icoStart.add(10 days)) {
-            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(120 + additionalBonus).div(100));
+        else if (now <= icoStart.add(10 days)) {
+            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(120).div(100));
         }
         else if (now <= icoStart.add(20 days)) {
-            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(115 + additionalBonus).div(100));
+            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(115).div(100));
         }
         else if (now <= icoStart.add(30 days)) {
-            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(110 + additionalBonus).div(100));
+            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(110).div(100));
         }
         else if (now <= icoStart.add(40 days)) {
-            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(105 + additionalBonus).div(100));
+            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(105).div(100));
         }
         else {
-            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(finalBonus + additionalBonus).div(100));
+            chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(finalBonus).div(100));
         }
         
         emit ChefICOTransfer(msg.sender, amount, true);
@@ -162,20 +173,6 @@ contract ChefICO {
     }
 
     
-    function reservedAmount(uint256 _value) public onlyOwner {
-	_value = _value * 1 ether;
-        require(totalAmount.add(_value) <= hardCap);
-        reservedAmount = _value;
-        tempHardCap = hardCap.sub(_value);
-    }
-    
-    
-   function setSoftCapStatus (bool _value) public onlyOwner beforeICOdeadline {
-        require(hardCap >= totalAmount.add(reservedAmount));
-	softCapReached = _value;
-	}
-
-
    function safeWithdrawal() public afterICOdeadline {
         if (!softCapReached) {
 	    uint256 amount = balanceOf[msg.sender];
