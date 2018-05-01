@@ -4,7 +4,6 @@ Promjene su takve da je limit za uplatu je dignut na 250ETH, a definirani su i b
 Maknute su funkcije koje su omogućavale ručno spuštanje har cap-a te upravljanje sa varijabolom koja indicira da je foct cap dosegnut.
 
  kratki opis značajnijih funkcija:
---setFinalBonus funcija služi da bi se u zadnjem periodu ICO-a mogao povećati bonus s 0% na neku veću razinu ako se za takav korak odluči uprava
 --safeWithdrawal funkcija služi da bi osoba u slučaju neuspješnog ICO-a mogla povući ETH natrag na svoj račun. 
 --chefOwnerWithdrawal funkcija služi da bi vlasnik tokena u slučaju uspješnog ICO-a mogao povući ETH na svoj račun. Isplata tokena sudionicima ICO-a će se raditi ručno
     nakon što se provjeri KYC za svaku osobu te nakon što se pokuša provjeriti da pojedina osoba nije s više adresa uplatila iznos veći od 10 000 eura. 
@@ -22,10 +21,10 @@ Funkcija za uplatu ETH ima sljedeće karakteristike:
     *za uplatu u narednih 10 dana ICO-a osoba ostvaruje 10% bonusa
     *za uplatu u narednih 10 dana ICO-a osoba ostvaruje 5% bonusa
 - bonusi za velike uplate su :
-    * za uplatu veću od 100 ETH 40%
-    * za uplatu između 50 ETH i 100 ETH 35%
-    * za uplatu između 25 ETH i 50 ETH 30%
-    * za uplatu između 10 ETH i 25 ETH 25%
+    * za uplatu veću od 150 ETH 35%
+    * za uplatu između 70 ETH i 150 ETH 30%
+    * za uplatu između 25 ETH i 70 ETH 25%
+    * za uplatu između 10 ETH i 25 ETH 20%
 */
 
   pragma solidity 0.4.23;
@@ -129,16 +128,16 @@ contract ChefICO {
        
         if (amount >= 10 ether) {
             if (amount >= 150 ether) {
-                chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(140).div(100));
-            }
-            else if (amount >= 70 ether) {
                 chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(135).div(100));
             }
-            else if (amount >= 25 ether) {
+            else if (amount >= 70 ether) {
                 chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(130).div(100));
             }
-            else {
+            else if (amount >= 25 ether) {
                 chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(125).div(100));
+            }
+            else {
+                chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(120).div(100));
             }
         }
         else if (now <= icoStart.add(10 days)) {
@@ -178,8 +177,8 @@ contract ChefICO {
     }
         
     
-    function chefOwnerWithdrawal() public afterICOdeadline onlyOwner {    
-        if (softCapReached) {
+    function chefOwnerWithdrawal() public onlyOwner {    
+        if ((now >= icoEnd && softCapReached) || hardCapReached) {
             chefOwner.transfer(totalAmount);
             emit ChefICOTransfer(chefOwner, totalAmount, false);
         }
