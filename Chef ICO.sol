@@ -1,32 +1,38 @@
 /*
-**U zadnjoj izmjeni dva ICO smart contracta su spojena u jedan - ovaj koji je bio namijenjen za opću publiku. 
-Promjene su takve da je limit za uplatu je dignut na 250ETH, a definirani su i bonusi za veće uplate. Bonusi su opisani pred kraj komentara.
-Maknute su funkcije koje su omogućavale ručno spuštanje har cap-a te upravljanje sa varijabolom koja indicira da je foct cap dosegnut.
+The ChefICO Smart Contract has the following features implemented:
+- ETH can only be deposited before the 1st of July, 2018., and only in amounts greater to or equal to 0.2 ETH.
+- A address(person) can not deposit ETH to the smart contract after they have already deposited 250 ETH.
+- It is not possible to deposit ETH to the smart contract once the hard cap has been reached.
+- If a address(person) deposits an ETH amount which makes the total funds deposited to the smart contract exceed the hard cap, 
+  exceeded amount is returned to the address.
+- If a address(person) deposits an amount which is greater than 250 ETH, or which makes their total deposits through the ICO 
+  exceed 250 ETH, exceeded amount is returned to the address.
 
- kratki opis značajnijih funkcija:
---safeWithdrawal funkcija služi da bi osoba u slučaju neuspješnog ICO-a mogla povući ETH natrag na svoj račun. 
---chefOwnerWithdrawal funkcija služi da bi vlasnik tokena u slučaju uspješnog ICO-a mogao povući ETH na svoj račun. Isplata tokena sudionicima ICO-a će se raditi ručno
-    nakon što se provjeri KYC za svaku osobu te nakon što se pokuša provjeriti da pojedina osoba nije s više adresa uplatila iznos veći od 10 000 eura. 
-    
-Funkcija za uplatu ETH ima sljedeće karakteristike:
-- nije moguće raditi uplate nakon što je skupljen hardCap
-- osoba ne može raditi uplate nakon što je uplatila više od 250 ETH
-- moguće je uplaćivati ETH samo prije 01.07.2018 i to iznose ne manje od 0.2 ETH
-- ako je osoba uplatila određeni iznos s kojim je pređen hardCap, iznos preko hardCap-a će biti vraćen osobi
-- ako je osoba uplatila ili zadnjom uplatom prešla preko 250ETH, inos preko 250 ETH će joj biti vraćen
-- ako je osoba uplatila iznos manji od 10 ETH ostvaruje osnovne bonuse definirane vremenom
-- osnovni bonusi su :
-    *za uplatu u prvih 10 dana ICO-a osoba ostvaruje 20% bonusa
-    *za uplatu u narednih 10 dana ICO-a osoba ostvaruje 15% bonusa
-    *za uplatu u narednih 10 dana ICO-a osoba ostvaruje 10% bonusa
-    *za uplatu u narednih 10 dana ICO-a osoba ostvaruje 5% bonusa
-- bonusi za velike uplate su :
-    * za uplatu veću od 150 ETH 35%
-    * za uplatu između 70 ETH i 150 ETH 30%
-    * za uplatu između 25 ETH i 70 ETH 25%
-    * za uplatu između 10 ETH i 25 ETH 20%
+- If a address(person) deposits an amount that is less than 10 ETH, they achieve certain bonuses based on the time of the transaction.
+  The time-based bonuses for deposits that are less than 10 ETH are defined as follows:
+    1. Deposits made within the first ten days of the ICO achieve a 20% bonus in CHEF tokens.
+    2. Deposits made within the second ten days of the ICO achieve a 15% bonus in CHEF tokens.
+    3. Deposits made within the third ten days of the ICO achieve a 10% bonus in CHEF tokens.
+    4. Deposits made within the fourth ten days of the ICO achieve a 5% bonus in CHEF tokens.
+
+- If a address(person) deposits an amount that is equal to or greater than 10 ETH, they achieve certain bonuses based on the 
+  amount transfered. The volume-based bonuses for deposits that are greater than or equal to 10 ETH are defined as follows:
+    1. Deposits greater than or equal to 150 ETH achieve a 35% bonus in CHEF tokens.
+    2. Deposits smaller than 150 ETH, but greater than or equal to 70 ETH achieve a 30% bonus in CHEF tokens.
+    3. Deposits smaller than 70 ETH, but greater than or equal to 25 ETH achieve a 25% bonus in CHEF tokens.
+    4. Deposits smaller than 25 ETH, but greater than or equal to 10 ETH achieve a 20% bonus in CHEF tokens.
+
+Short overview of significant functions:
+- safeWithdrawal:
+    This function enables users to withdraw the funds they have deposited to the ICO in case the ICO does not reach the soft cap. 
+    It will be possible to withdraw the deposited ETH only after the 1st of July, 2018.
+- chefOwnerWithdrawal: 
+    This function enables the ICO smart contract owner to withdraw the funds in case the ICO reaches the soft or hard cap 
+    (ie. the ICO is successful). The CHEF tokens will be released to investors manually, after we check the KYC status of each 
+    person that has contributed 10 or more ETH, as well as we confirm that each person has not contributed more than 10 ETH 
+    from several addresses.
 */
-
+  
   pragma solidity 0.4.23;
   import "github.com/OpenZeppelin/zeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -91,6 +97,7 @@ contract ChefICO {
             _; 
         }
         
+        
     modifier beforeICOdeadline() { 
         require(now <= icoEnd );
             _; 
@@ -123,9 +130,7 @@ contract ChefICO {
 
         totalAmount = totalAmount.add(amount);
         balanceOf[msg.sender] = balanceOf[msg.sender].add(amount);
-        
-
-       
+               
         if (amount >= 10 ether) {
             if (amount >= 150 ether) {
                 chefBalanceOf[msg.sender] = chefBalanceOf[msg.sender].add(amount.div(chefPrice).mul(135).div(100));
