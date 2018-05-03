@@ -1,4 +1,19 @@
-  pragma solidity 0.4.23;
+/*
+Besides standard token functions, ChefToken smart contract has the following functions implemented:
+- servicePaymentWithCharityPercentage:
+    After the client and service provider agree on a service and it's fee, the fee is transfered to the CookUp smart contract address
+    to ensure that the service provider will be paid. Once the service has been completed, the CookUp application calls this function, 
+    which then calculates and transfers the required percentages of the fee to the service provider, as well as to charity organization.
+    The funds that will be sent to charity organization are first stored at a temporary address.
+- releaseAdvisorsTeamTokens:
+    This function is used to transfer CHEF tokens reserved for CookUp partners and advisors to a temporary address every month, 
+    for twelve months. It can only be called by the owner and has a built in condition which prevents the funds from being released 
+    earlier than intended.
+- burn:
+    This function will be used only to burn unsold tokens during ICO.
+*/
+
+pragma solidity 0.4.23;
   import "github.com/OpenZeppelin/zeppelin-solidity/contracts/math/SafeMath.sol";
   
 contract Ownable{
@@ -20,12 +35,8 @@ contract Ownable{
         emit OwnershipTransferred(chefOwner, newOwner);
         chefOwner = newOwner;
     }
-
 }  
 
-// ----------------------------------------------------------------------------
-// interface for the token
-// ----------------------------------------------------------------------------
 
 contract ChefTokenInterface {
     
@@ -54,9 +65,6 @@ interface tokenRecipient {
     function receiveApproval(address from, uint256 value, address token, bytes extraData) external; 
 }
 
-// ----------------------------------------------------------------------------
-// ChefToken contract
-//-----------------------------------------------------------------------------
 
 contract ChefToken is Ownable, ChefTokenInterface {
     
@@ -78,7 +86,7 @@ contract ChefToken is Ownable, ChefTokenInterface {
     
     
     function ChefToken () public {
-    totalSupply = 630*(10**6)*(10**18);   //total supply of CHEF tokens is 630 milions
+    totalSupply = 630*(10**6)*(10**18);   
     balanceOf[msg.sender] = totalSupply;  
     name = "CHEF";                  
     symbol = "CHEF";
@@ -90,7 +98,7 @@ contract ChefToken is Ownable, ChefTokenInterface {
     releaseSum = 1575*(10**5)*(10**18);
     cookUpFee = 7;
     charityDonation=3;
-	}
+	  }
 
 
     function totalSupply() public view returns (uint256 supply) {
@@ -119,14 +127,7 @@ contract ChefToken is Ownable, ChefTokenInterface {
         return true;
     }
 	
-// ----------------------------------------------------------------------------
-// prema prijedlogu, editirao sam funkciju za charity isplatu na način da se računa
-// 90% ukupnog iznosa koji se potom šalje kuharu te
-// 3% ukupnog iznosa koji se potom šalje humanitarnoj organizaciji
-// ostatak od 7% ostaje CookUp-u. Varijabla charityDonation predstavlja postotak za humanitarnu udrugu,  
-// a varijabla cookUpFee predstavlja postotak za CookUp.
-// sredstva za humanitarnu udrugu se isplaćuju na privremenu adresu s koje će se potom slati različitim udrugama.
-//-----------------------------------------------------------------------------
+
     function servicePaymentWithCharityPercentage(address _to, uint256 _value)  public onlyOwner returns  (bool success) {
         uint256 servicePercentage = 100 - cookUpFee - charityDonation;
         _transfer(msg.sender, _to, _value.mul(servicePercentage).div(100));
@@ -149,7 +150,7 @@ contract ChefToken is Ownable, ChefTokenInterface {
 	
 
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
-        require(_value <= allowance[_from][msg.sender]);     // Check allowance
+        require(_value <= allowance[_from][msg.sender]);   
         allowance[_from][msg.sender] = allowance[_from][msg.sender].sub(_value);
         _transfer(_from, _to, _value);
         return true;
@@ -194,12 +195,8 @@ contract ChefToken is Ownable, ChefTokenInterface {
         tempAdvisorsTeam = _tempAddress;
         return true;    
     }
-//-----------------------------------------------------------------------------
-// prema prijedlogu, dodao sam funkciju koja isplaćuje partner i advisor tokene svakih 12
-// mjeseci po jednak dio na proizvoljnu temp adresu s koje se kasnije tokeni mogu prebacivati
-// trećim adresama
-//-----------------------------------------------------------------------------
-    
+
+
     function releaseAdvisorsTeamTokens () public onlyOwner returns (bool success) {
         uint256 releaseAmount = releaseSum.div(12);
         if((releaseSum >= (tokensReleasedAdvisorsTeam.add(releaseAmount))) && (initialReleaseDate+(tokensReleasedAdvisorsTeam.mul(30 days).mul(12).div(releaseSum)) <= now)) {
@@ -210,6 +207,5 @@ contract ChefToken is Ownable, ChefTokenInterface {
         else {
             return false;
         }
-    }
-    
+    }    
 }
